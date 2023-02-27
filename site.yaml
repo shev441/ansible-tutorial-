@@ -4,17 +4,28 @@
   become: true
   tasks:
 
-  - name: install updates (CentOS)
+  - name: update repo cache (CentOS)
     dnf:
-      update_only: yes
       update_cache: yes
+    changed_when: false
     when: ansible_distribution == "CentOS"
 
-  - name: install updates (Ubuntu)
+  - name: update repo cache (Ubuntu)
     apt:
-      upgrade: dist
       update_cache: yes
+    changed_when: false
     when: ansible_distribution == "Ubuntu"
+
+- hosts: all
+  become: true
+  tasks:
+
+  - name: add ssh key for simone
+    tags: always
+    authorized_key:
+      user: simone
+      key: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHDtykfolDV7BuaU9RP/w3G4YShHYuIsw4QcHdBuWLB0 ansible2"
+
 
 - hosts: workstations
   become: true
@@ -44,7 +55,16 @@
       state: latest
     when: ansible_distribution == "Ubuntu"
 
+  - name: start httpd (CentOS)
+    tags: apache,centos,httpd
+    service:
+      name: httpd
+      state: started
+    when: ansible_distribution == "CentOS"
+
+
   - name: install apache and php packages for CentOS , update cache
+    tags: apache,centos,httpd
     dnf:
       name:
         - httpd
